@@ -109,7 +109,7 @@ export default function Page(): React.JSX.Element {
     setEditCustomer({
       name: "",
       diseasePrevention: "",
-      price: "",
+      price: 0,
       img: "",
       dosageRegimen: {
         doses: 1, // Mặc định là 1 liều
