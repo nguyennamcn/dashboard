@@ -21,11 +21,14 @@ import { CustomersFilters } from './customers-filters';
 
 export interface Customer {
   id: string;
-  img: string;
   name: string;
-  status: string;
   price: number;
-  createdAt: Date;
+  img: string;
+  diseasePrevention?: string; // ✅ Add this field
+  dosageRegimen: {
+    doses: number;
+    intervals: string[];
+  };
 }
 
 interface CustomersTableProps {
@@ -75,7 +78,7 @@ export function CustomersTable({ rows = [], onEdit, onDelete }: CustomersTablePr
                 />
               </TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Status</TableCell>
+              {/* <TableCell>Status</TableCell> */}
               <TableCell>Price</TableCell>
               <TableCell>Import date</TableCell>
               <TableCell>Actions</TableCell>
@@ -101,7 +104,7 @@ export function CustomersTable({ rows = [], onEdit, onDelete }: CustomersTablePr
                       <Typography variant="subtitle2">{row.name}</Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.status}</TableCell>
+                  {/* <TableCell>{row.status}</TableCell> */}
                   <TableCell>{row.price}</TableCell>
                   <TableCell>{dayjs(row.createdAt).format('MMM D, YYYY')}</TableCell>
                   <TableCell>

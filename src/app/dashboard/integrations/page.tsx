@@ -101,7 +101,7 @@ export default function Page(): React.JSX.Element {
               {orders.map((order) => (
                 <TableRow hover key={order._id} onClick={() => handleRowClick(order._id)} sx={{ cursor: "pointer" }}>
                   <TableCell>{order._id.slice(0, 8)}</TableCell>
-                  <TableCell>{order.userId.fullname}</TableCell>
+                  <TableCell>{order.userId ? order.userId.fullname : 'Unknown User'}</TableCell>
                   <TableCell>{dayjs(order.createdAt).format("MMM D, YYYY")}</TableCell>
                   <TableCell>
                     {order.vaccines.map((vaccine, index) => (
@@ -125,8 +125,8 @@ export default function Page(): React.JSX.Element {
               <>
                 <Typography variant="h6" gutterBottom>Order Details</Typography>
                 <Typography variant="body1">Order ID: {selectedOrder._id}</Typography>
-                <Typography variant="body1">Customer: {selectedOrder.userId.fullname}</Typography>
-                <Typography variant="body1">Email: {selectedOrder.userId.email}</Typography>
+                <Typography variant="body1">Customer: {selectedOrder.userId ? selectedOrder.userId.fullname : 'Unknown User' }</Typography>
+                <Typography variant="body1">Email: {selectedOrder.userId ? selectedOrder.userId.email : 'Unknown Email'}</Typography>
                 <Typography variant="body1">Date: {dayjs(selectedOrder.createdAt).format("MMM D, YYYY")}</Typography>
                 {selectedOrder.vaccines.map((vaccine, index) => (
                   <Box key={index} sx={{ mt: 2 }}>

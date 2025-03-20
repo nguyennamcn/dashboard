@@ -60,7 +60,7 @@ export function LatestOrders({ orders = [], sx }: LatestOrdersProps): React.JSX.
               return (
                 <TableRow hover key={order._id}>
                   <TableCell>{order._id.slice(0, 8)}</TableCell>
-                  <TableCell>{order.userId.fullname}</TableCell>
+                  <TableCell>{order.userId ? order.userId.fullname : 'Unknown User'}</TableCell>
                   <TableCell>{dayjs(order.createdAt).format('MMM D, YYYY')}</TableCell>
                   <TableCell>
                     <Chip color={color} label={label} size="small" />
