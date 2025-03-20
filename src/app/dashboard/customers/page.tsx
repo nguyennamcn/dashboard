@@ -1,126 +1,218 @@
-import * as React from 'react';
-import type { Metadata } from 'next';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { Download as DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
-import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import { Upload as UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
-import dayjs from 'dayjs';
+"use client";
 
-import { config } from '@/config';
-import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
-import { CustomersTable } from '@/components/dashboard/customer/customers-table';
-import type { Customer } from '@/components/dashboard/customer/customers-table';
-
-export const metadata = { title: `Customers | Dashboard | ${config.site.name}` } satisfies Metadata;
-
-const customers = [
-  {
-    id: 'USR-010',
-    name: 'Alcides Antonio',
-    avatar: '/assets/avatar-10.png',
-    email: 'alcides.antonio@devias.io',
-    phone: '908-691-3242',
-    address: { city: 'Madrid', country: 'Spain', state: 'Comunidad de Madrid', street: '4158 Hedge Street' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-009',
-    name: 'Marcus Finn',
-    avatar: '/assets/avatar-9.png',
-    email: 'marcus.finn@devias.io',
-    phone: '415-907-2647',
-    address: { city: 'Carson City', country: 'USA', state: 'Nevada', street: '2188 Armbrester Drive' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-008',
-    name: 'Jie Yan',
-    avatar: '/assets/avatar-8.png',
-    email: 'jie.yan.song@devias.io',
-    phone: '770-635-2682',
-    address: { city: 'North Canton', country: 'USA', state: 'Ohio', street: '4894 Lakeland Park Drive' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-007',
-    name: 'Nasimiyu Danai',
-    avatar: '/assets/avatar-7.png',
-    email: 'nasimiyu.danai@devias.io',
-    phone: '801-301-7894',
-    address: { city: 'Salt Lake City', country: 'USA', state: 'Utah', street: '368 Lamberts Branch Road' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-006',
-    name: 'Iulia Albu',
-    avatar: '/assets/avatar-6.png',
-    email: 'iulia.albu@devias.io',
-    phone: '313-812-8947',
-    address: { city: 'Murray', country: 'USA', state: 'Utah', street: '3934 Wildrose Lane' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-005',
-    name: 'Fran Perez',
-    avatar: '/assets/avatar-5.png',
-    email: 'fran.perez@devias.io',
-    phone: '712-351-5711',
-    address: { city: 'Atlanta', country: 'USA', state: 'Georgia', street: '1865 Pleasant Hill Road' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-
-  {
-    id: 'USR-004',
-    name: 'Penjani Inyene',
-    avatar: '/assets/avatar-4.png',
-    email: 'penjani.inyene@devias.io',
-    phone: '858-602-3409',
-    address: { city: 'Berkeley', country: 'USA', state: 'California', street: '317 Angus Road' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-003',
-    name: 'Carson Darrin',
-    avatar: '/assets/avatar-3.png',
-    email: 'carson.darrin@devias.io',
-    phone: '304-428-3097',
-    address: { city: 'Cleveland', country: 'USA', state: 'Ohio', street: '2849 Fulton Street' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-002',
-    name: 'Siegbert Gottfried',
-    avatar: '/assets/avatar-2.png',
-    email: 'siegbert.gottfried@devias.io',
-    phone: '702-661-1654',
-    address: { city: 'Los Angeles', country: 'USA', state: 'California', street: '1798 Hickory Ridge Drive' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-  {
-    id: 'USR-001',
-    name: 'Miron Vitold',
-    avatar: '/assets/avatar-1.png',
-    email: 'miron.vitold@devias.io',
-    phone: '972-333-4106',
-    address: { city: 'San Diego', country: 'USA', state: 'California', street: '75247' },
-    createdAt: dayjs().subtract(2, 'hours').toDate(),
-  },
-] satisfies Customer[];
+import * as React from "react";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
+import Avatar from "@mui/material/Avatar";
+import { Download as DownloadIcon } from "@phosphor-icons/react/dist/ssr/Download";
+import { Plus as PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
+import { Upload as UploadIcon } from "@phosphor-icons/react/dist/ssr/Upload";
+import { CustomersFilters } from "@/components/dashboard/customer/customers-filters";
+import { CustomersTable } from "@/components/dashboard/customer/customers-table";
+import type { Customer } from "@/components/dashboard/customer/customers-table";
+import { URL_BASE } from "@/config";
 
 export default function Page(): React.JSX.Element {
-  const page = 0;
-  const rowsPerPage = 5;
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [open, setOpen] = React.useState(false);
+  const [editCustomer, setEditCustomer] = React.useState<Customer | null>(null);
+  const [isEditing, setIsEditing] = React.useState(false);
 
-  const paginatedCustomers = applyPagination(customers, page, rowsPerPage);
+  // 🛠 Fetch danh sách vaccine từ API khi trang load
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${URL_BASE}/vaccine/search`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("custom-auth-token")}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+
+
+        const data = await response.json();
+        setCustomers(data.data.data);
+      } catch (error) {
+        setError("Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 🛠 Khi nhấn "Edit", mở modal với dữ liệu vaccine theo ID
+  const handleEdit = async (id: string) => {
+    try {
+      const token = localStorage.getItem("custom-auth-token");
+      const response = await fetch(`${URL_BASE}/vaccine/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch customer details");
+      }
+
+      const data = await response.json();
+      setEditCustomer(data.data);
+
+      setIsEditing(true);
+      setOpen(true);
+    } catch (error) {
+      console.error("Error fetching customer details:", error);
+    }
+  };
+  // 🛠 Xóa vaccine theo ID
+  const handleDelete = async (id: string) => {
+    console.log(id)
+    try {
+      const token = localStorage.getItem("custom-auth-token");
+      const response = await fetch(`${URL_BASE}/vaccine/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete customer");
+      }
+
+      setCustomers((prev) => prev.filter((customer) => customer.id !== id));
+      window.location.reload()
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+    }
+  };
+
+  // 🛠 Mở modal để thêm mới vaccine
+  const handleOpen = () => {
+    setEditCustomer({
+      name: "",
+      diseasePrevention: "",
+      price: "",
+      img: "",
+      dosageRegimen: {
+        doses: 1, // Mặc định là 1 liều
+        intervals: [], // Mặc định là mảng rỗng
+      },
+    });
+    setIsEditing(false);
+    setOpen(true);
+  };
+
+  // 🛠 Đóng modal
+  const handleClose = () => setOpen(false);
+
+  // 🛠 Cập nhật dữ liệu khi nhập vào form
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+
+    setEditCustomer((prev) => {
+      if (!prev) return prev;
+
+      if (name === "doses") {
+        return {
+          ...prev,
+          dosageRegimen: {
+            ...prev.dosageRegimen,
+            doses: Number(value), // Chuyển thành số
+          },
+        };
+      }
+
+      if (name === "intervals") {
+        return {
+          ...prev,
+          dosageRegimen: {
+            ...prev.dosageRegimen,
+            intervals: value.split(",").map((interval) => interval.trim()), // Chuyển thành mảng
+          },
+        };
+      }
+
+      return { ...prev, [name]: value };
+    });
+  };
+
+  // 🛠 Gửi dữ liệu lên API khi bấm "Save"
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("custom-auth-token");
+      const url = isEditing
+        ? `${URL_BASE}/vaccine/${editCustomer?._id}`
+        : `${URL_BASE}/vaccine`;
+      const method = isEditing ? "PUT" : "POST";
+
+      const data = {
+        img: editCustomer?.img,
+        name: editCustomer?.name,
+        price: editCustomer?.price,
+        diseasePrevention: editCustomer?.diseasePrevention,
+        dosageRegimen: {
+          doses: editCustomer?.dosageRegimen?.doses ?? 1,
+          intervals: editCustomer?.dosageRegimen?.intervals ?? [],
+        },
+      };
+
+      console.log(data); // Kiểm tra dữ liệu trước khi gửi
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error(isEditing ? "Failed to update customer" : "Failed to add customer");
+      }
+
+      const savedCustomer = await response.json();
+
+      if (isEditing) {
+        setCustomers((prev) =>
+          prev.map((customer) =>
+            customer.id === savedCustomer.data.id ? savedCustomer.data : customer
+          )
+        );
+      } else {
+        setCustomers([...customers, savedCustomer.data]);
+      }
+      window.location.reload();
+      handleClose();
+    } catch (error) {
+      console.error(isEditing ? "Error updating customer:" : "Error adding customer:", error);
+    }
+  };
 
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={3}>
-        <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
-          <Typography variant="h4">Customers</Typography>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Stack spacing={1} sx={{ flex: "1 1 auto" }}>
+          <Typography variant="h4">Vaccines</Typography>
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
             <Button color="inherit" startIcon={<UploadIcon fontSize="var(--icon-fontSize-md)" />}>
               Import
             </Button>
@@ -130,22 +222,57 @@ export default function Page(): React.JSX.Element {
           </Stack>
         </Stack>
         <div>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
+          <Button
+            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+            variant="contained"
+            onClick={handleOpen}
+          >
             Add
           </Button>
         </div>
       </Stack>
-      <CustomersFilters />
-      <CustomersTable
-        count={paginatedCustomers.length}
-        page={page}
-        rows={paginatedCustomers}
-        rowsPerPage={rowsPerPage}
-      />
+
+      {loading ? (
+        <Typography>Loading...</Typography>
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <>
+          <CustomersTable onEdit={handleEdit} onDelete={handleDelete} count={customers.length} page={0} rows={customers} rowsPerPage={5} />
+        </>
+      )}
+
+      {/* Modal thêm / chỉnh sửa vaccine */}
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>{isEditing ? "Edit Customer" : "Add New Customer"}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <TextField label="Name" name="name" fullWidth value={editCustomer?.name || ""} onChange={handleChange} />
+            <TextField label="Disease Prevention" name="diseasePrevention" fullWidth value={editCustomer?.diseasePrevention || ""} onChange={handleChange} />
+            <TextField label="Price" name="price" fullWidth type="number" value={editCustomer?.price || ""} onChange={handleChange} />
+            <TextField label="Image URL" name="img" fullWidth value={editCustomer?.img || ""} onChange={handleChange} />
+
+            {editCustomer?.img && <Avatar src={editCustomer.img} sx={{ width: 56, height: 56 }} />}
+
+            {/* 🆕 Thêm trường số liều (doses) */}
+            <TextField label="Number of Doses" name="doses" type="number" fullWidth value={editCustomer?.dosageRegimen?.doses || 1} onChange={handleChange} />
+
+            {/* 🆕 Thêm trường khoảng cách giữa các liều (intervals) */}
+            <TextField
+              label="Intervals (comma-separated)"
+              name="intervals"
+              fullWidth
+              placeholder="E.g. 3 days, 7 days"
+              value={editCustomer?.dosageRegimen?.intervals?.join(", ") || ""}
+              onChange={handleChange}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="inherit">Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
-}
-
-function applyPagination(rows: Customer[], page: number, rowsPerPage: number): Customer[] {
-  return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }

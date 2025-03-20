@@ -35,6 +35,10 @@ export interface LatestOrdersProps {
 }
 
 export function LatestOrders({ orders = [], sx }: LatestOrdersProps): React.JSX.Element {
+  const actualProducts = orders[0] || [];
+  const sortedProducts = [...actualProducts].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const visibleProducts =  sortedProducts.slice(0, 5);
+  console.log(visibleProducts)
   return (
     <Card sx={sx}>
       <CardHeader title="Latest orders" />
@@ -50,13 +54,13 @@ export function LatestOrders({ orders = [], sx }: LatestOrdersProps): React.JSX.
             </TableRow>
           </TableHead>
           <TableBody>
-            {orders.map((order) => {
-              const { label, color } = statusMap[order.status] ?? { label: 'Unknown', color: 'default' };
+            {visibleProducts.map((order) => {
+              const { label, color } = statusMap[order.vaccines[0].status] ?? { label: 'Unknown', color: 'default' };
 
               return (
-                <TableRow hover key={order.id}>
-                  <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.customer.name}</TableCell>
+                <TableRow hover key={order._id}>
+                  <TableCell>{order._id.slice(0, 8)}</TableCell>
+                  <TableCell>{order.userId.fullname}</TableCell>
                   <TableCell>{dayjs(order.createdAt).format('MMM D, YYYY')}</TableCell>
                   <TableCell>
                     <Chip color={color} label={label} size="small" />

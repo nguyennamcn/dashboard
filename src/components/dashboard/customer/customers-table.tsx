@@ -14,48 +14,53 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import dayjs from 'dayjs';
-
 import { useSelection } from '@/hooks/use-selection';
-
-function noop(): void {
-  // do nothing
-}
+import { CustomersFilters } from './customers-filters';
 
 export interface Customer {
   id: string;
-  avatar: string;
+  img: string;
   name: string;
-  email: string;
-  address: { city: string; state: string; country: string; street: string };
-  phone: string;
+  status: string;
+  price: number;
   createdAt: Date;
 }
 
 interface CustomersTableProps {
-  count?: number;
-  page?: number;
-  rows?: Customer[];
-  rowsPerPage?: number;
+  rows: Customer[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function CustomersTable({
-  count = 0,
-  rows = [],
-  page = 0,
-  rowsPerPage = 0,
-}: CustomersTableProps): React.JSX.Element {
-  const rowIds = React.useMemo(() => {
-    return rows.map((customer) => customer.id);
-  }, [rows]);
+export function CustomersTable({ rows = [], onEdit, onDelete }: CustomersTableProps): React.JSX.Element {
+  const [page, setPage] = React.useState(0);
+  const rowsPerPage = 5;
+  const [searchTerm, setSearchTerm] = React.useState('');
 
+  // Lọc dữ liệu theo tên khách hàng
+  const filteredRows = React.useMemo(() => {
+    return rows.filter((customer) =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
+
+  const rowIds = React.useMemo(() => filteredRows.map((customer) => customer.id), [filteredRows]);
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
 
-  const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < rows.length;
-  const selectedAll = rows.length > 0 && selected?.size === rows.length;
+  const selectedSome = selected.size > 0 && selected.size < filteredRows.length;
+  const selectedAll = filteredRows.length > 0 && selected.size === filteredRows.length;
+
+  const handlePageChange = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
 
   return (
     <Card>
+      {/* Ô tìm kiếm */}
+      <CustomersFilters onSearch={setSearchTerm} />
+
       <Box sx={{ overflowX: 'auto' }}>
         <Table sx={{ minWidth: '800px' }}>
           <TableHead>
@@ -65,51 +70,48 @@ export function CustomersTable({
                   checked={selectedAll}
                   indeterminate={selectedSome}
                   onChange={(event) => {
-                    if (event.target.checked) {
-                      selectAll();
-                    } else {
-                      deselectAll();
-                    }
+                    event.target.checked ? selectAll() : deselectAll();
                   }}
                 />
               </TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Signed Up</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Import date</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => {
-              const isSelected = selected?.has(row.id);
+            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+              const isSelected = selected.has(row._id);
 
               return (
-                <TableRow hover key={row.id} selected={isSelected}>
+                <TableRow hover key={row._id} selected={isSelected}>
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={isSelected}
                       onChange={(event) => {
-                        if (event.target.checked) {
-                          selectOne(row.id);
-                        } else {
-                          deselectOne(row.id);
-                        }
+                        event.target.checked ? selectOne(row._id) : deselectOne(row._id);
                       }}
                     />
                   </TableCell>
                   <TableCell>
                     <Stack sx={{ alignItems: 'center' }} direction="row" spacing={2}>
-                      <Avatar src={row.avatar} />
+                      <Avatar src={row.img} />
                       <Typography variant="subtitle2">{row.name}</Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>
-                    {row.address.city}, {row.address.state}, {row.address.country}
-                  </TableCell>
-                  <TableCell>{row.phone}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                  <TableCell>{row.price}</TableCell>
                   <TableCell>{dayjs(row.createdAt).format('MMM D, YYYY')}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => onEdit(row._id)} color="primary">
+                      ✏️
+                    </IconButton>
+                    <IconButton onClick={() => onDelete(row._id)} color="error">
+                      🗑️
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -119,12 +121,12 @@ export function CustomersTable({
       <Divider />
       <TablePagination
         component="div"
-        count={count}
-        onPageChange={noop}
-        onRowsPerPageChange={noop}
+        count={filteredRows.length}
         page={page}
         rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={() => {}}
+        rowsPerPageOptions={[5]}
       />
     </Card>
   );

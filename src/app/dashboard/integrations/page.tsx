@@ -1,106 +1,148 @@
-import * as React from 'react';
-import type { Metadata } from 'next';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Pagination from '@mui/material/Pagination';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Unstable_Grid2';
-import { Download as DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
-import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import { Upload as UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
-import dayjs from 'dayjs';
+"use client";
 
-import { config } from '@/config';
-import { IntegrationCard } from '@/components/dashboard/integrations/integrations-card';
-import type { Integration } from '@/components/dashboard/integrations/integrations-card';
-import { CompaniesFilters } from '@/components/dashboard/integrations/integrations-filters';
+import * as React from "react";
+import { useState, useEffect } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardHeader from "@mui/material/CardHeader";
+import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Pagination from "@mui/material/Pagination";
+import Modal from "@mui/material/Modal";
+import Fade from "@mui/material/Fade";
+import Backdrop from "@mui/material/Backdrop";
+import dayjs from "dayjs";
+import { URL_BASE } from "@/config";
 
-export const metadata = { title: `Integrations | Dashboard | ${config.site.name}` } satisfies Metadata;
-
-const integrations = [
-  {
-    id: 'INTEG-006',
-    title: 'Dropbox',
-    description: 'Dropbox is a file hosting service that offers cloud storage, file synchronization, a personal cloud.',
-    logo: '/assets/logo-dropbox.png',
-    installs: 594,
-    updatedAt: dayjs().subtract(12, 'minute').toDate(),
-  },
-  {
-    id: 'INTEG-005',
-    title: 'Medium Corporation',
-    description: 'Medium is an online publishing platform developed by Evan Williams, and launched in August 2012.',
-    logo: '/assets/logo-medium.png',
-    installs: 625,
-    updatedAt: dayjs().subtract(43, 'minute').subtract(1, 'hour').toDate(),
-  },
-  {
-    id: 'INTEG-004',
-    title: 'Slack',
-    description: 'Slack is a cloud-based set of team collaboration tools and services, founded by Stewart Butterfield.',
-    logo: '/assets/logo-slack.png',
-    installs: 857,
-    updatedAt: dayjs().subtract(50, 'minute').subtract(3, 'hour').toDate(),
-  },
-  {
-    id: 'INTEG-003',
-    title: 'Lyft',
-    description: 'Lyft is an on-demand transportation company based in San Francisco, California.',
-    logo: '/assets/logo-lyft.png',
-    installs: 406,
-    updatedAt: dayjs().subtract(7, 'minute').subtract(4, 'hour').subtract(1, 'day').toDate(),
-  },
-  {
-    id: 'INTEG-002',
-    title: 'GitHub',
-    description: 'GitHub is a web-based hosting service for version control of code using Git.',
-    logo: '/assets/logo-github.png',
-    installs: 835,
-    updatedAt: dayjs().subtract(31, 'minute').subtract(4, 'hour').subtract(5, 'day').toDate(),
-  },
-  {
-    id: 'INTEG-001',
-    title: 'Squarespace',
-    description: 'Squarespace provides software as a service for website building and hosting. Headquartered in NYC.',
-    logo: '/assets/logo-squarespace.png',
-    installs: 435,
-    updatedAt: dayjs().subtract(25, 'minute').subtract(6, 'hour').subtract(6, 'day').toDate(),
-  },
-] satisfies Integration[];
+const statusMap = {
+  pending: { label: "Pending", color: "warning" },
+  delivered: { label: "Delivered", color: "success" },
+  refunded: { label: "Refunded", color: "error" },
+} as const;
 
 export default function Page(): React.JSX.Element {
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${URL_BASE}/order/search`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("custom-auth-token")}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setOrders(data.data.data);
+      } catch (error) {
+        console.error("Failed to fetch orders", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleRowClick = async (orderId) => {
+    try {
+      const response = await fetch(`${URL_BASE}/order/${orderId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("custom-auth-token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch order details: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data.data)
+      setSelectedOrder(data.data);
+      setOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch order details", error);
+    }
+  };
+
   return (
     <Stack spacing={3}>
-      <Stack direction="row" spacing={3}>
-        <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
-          <Typography variant="h4">Integrations</Typography>
-          <Stack sx={{ alignItems: 'center' }} direction="row" spacing={1}>
-            <Button color="inherit" startIcon={<UploadIcon fontSize="var(--icon-fontSize-md)" />}>
-              Import
-            </Button>
-            <Button color="inherit" startIcon={<DownloadIcon fontSize="var(--icon-fontSize-md)" />}>
-              Export
-            </Button>
-          </Stack>
-        </Stack>
-        <div>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
-            Add
-          </Button>
-        </div>
-      </Stack>
-      <CompaniesFilters />
-      <Grid container spacing={3}>
-        {integrations.map((integration) => (
-          <Grid key={integration.id} lg={4} md={6} xs={12}>
-            <IntegrationCard integration={integration} />
-          </Grid>
-        ))}
-      </Grid>
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Pagination count={3} size="small" />
-      </Box>
+      <Typography variant="h4">Orders</Typography>
+      <Card>
+        <CardHeader title="Orders" />
+        <Divider />
+        <Box sx={{ overflowX: "auto" }}>
+          <Table sx={{ minWidth: 800 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Order ID</TableCell>
+                <TableCell>Customer</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow hover key={order._id} onClick={() => handleRowClick(order._id)} sx={{ cursor: "pointer" }}>
+                  <TableCell>{order._id.slice(0, 8)}</TableCell>
+                  <TableCell>{order.userId.fullname}</TableCell>
+                  <TableCell>{dayjs(order.createdAt).format("MMM D, YYYY")}</TableCell>
+                  <TableCell>
+                    {order.vaccines.map((vaccine, index) => (
+                      <Chip key={index} color={statusMap[vaccine.status]?.color || "default"} label={statusMap[vaccine.status]?.label || "Unknown"} size="small" sx={{ marginRight: 1 }} />
+                    ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Box>
+        <Divider />
+      </Card>
+      <Pagination count={5} shape="rounded" />
+
+      {/* Order Detail Modal */}
+      <Modal open={open} onClose={() => setOpen(false)} closeAfterTransition BackdropComponent={Backdrop} BackdropProps={{ timeout: 500 }}>
+        <Fade in={open}>
+          <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 400, bgcolor: "background.paper", boxShadow: 24, p: 4, borderRadius: 2 }}>
+            {selectedOrder ? (
+              <>
+                <Typography variant="h6" gutterBottom>Order Details</Typography>
+                <Typography variant="body1">Order ID: {selectedOrder._id}</Typography>
+                <Typography variant="body1">Customer: {selectedOrder.userId.fullname}</Typography>
+                <Typography variant="body1">Email: {selectedOrder.userId.email}</Typography>
+                <Typography variant="body1">Date: {dayjs(selectedOrder.createdAt).format("MMM D, YYYY")}</Typography>
+                {selectedOrder.vaccines.map((vaccine, index) => (
+                  <Box key={index} sx={{ mt: 2 }}>
+                    <Typography variant="body1">Vaccine Id: {vaccine.vaccineId}</Typography>
+                    <Typography variant="body1">Dose Number: {vaccine.countDoseNumber}</Typography>
+                    <Typography variant="body1">Next Scheduled Date: {dayjs(vaccine.nextScheduledDate).format("MMM D, YYYY")}</Typography>
+                  </Box>
+                ))}
+                <Button onClick={() => setOpen(false)} sx={{ mt: 2 }} fullWidth variant="contained" color="primary">Close</Button>
+              </>
+            ) : (
+              <Typography>Loading order details...</Typography>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </Stack>
   );
 }

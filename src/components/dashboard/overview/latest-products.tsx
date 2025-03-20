@@ -28,16 +28,20 @@ export interface LatestProductsProps {
 }
 
 export function LatestProducts({ products = [], sx }: LatestProductsProps): React.JSX.Element {
+  const actualProducts = products[0] || [];
+  const sortedProducts = [...actualProducts].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const visibleProducts =  sortedProducts.slice(0, 5);
+  console.log(visibleProducts)
   return (
     <Card sx={sx}>
       <CardHeader title="Latest products" />
       <Divider />
       <List>
-        {products.map((product, index) => (
-          <ListItem divider={index < products.length - 1} key={product.id}>
+        {visibleProducts.map((product, index) => (
+          <ListItem divider={index < products.length - 1} key={product?._id}>
             <ListItemAvatar>
-              {product.image ? (
-                <Box component="img" src={product.image} sx={{ borderRadius: 1, height: '48px', width: '48px' }} />
+              {product?.img ? (
+                <Box component="img" src={product?.img} sx={{ borderRadius: 1, height: '48px', width: '48px' }} />
               ) : (
                 <Box
                   sx={{
@@ -50,9 +54,9 @@ export function LatestProducts({ products = [], sx }: LatestProductsProps): Reac
               )}
             </ListItemAvatar>
             <ListItemText
-              primary={product.name}
+              primary={product?.name}
               primaryTypographyProps={{ variant: 'subtitle1' }}
-              secondary={`Updated ${dayjs(product.updatedAt).format('MMM D, YYYY')}`}
+              secondary={`Updated ${dayjs(product?.updatedAt).format('MMM D, YYYY')}`}
               secondaryTypographyProps={{ variant: 'body2' }}
             />
             <IconButton edge="end">

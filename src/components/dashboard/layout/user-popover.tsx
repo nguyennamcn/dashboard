@@ -16,6 +16,7 @@ import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/client';
 import { logger } from '@/lib/default-logger';
 import { useUser } from '@/hooks/use-user';
+import { URL_BASE } from '@/config';
 
 export interface UserPopoverProps {
   anchorEl: Element | null;
@@ -25,24 +26,52 @@ export interface UserPopoverProps {
 
 export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): React.JSX.Element {
   const { checkSession } = useUser();
-
   const router = useRouter();
 
+  const [user, setUser] = React.useState<{ name: string; email: string } | null>(null);
+
+
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userId = localStorage.getItem("id"); 
+        const token = localStorage.getItem("custom-auth-token");
+        const response = await fetch(`${URL_BASE}/user/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // 🟢 Gửi token trong header
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const data = await response.json();
+        console.log(data)
+        setUser({ name: data.name, email: data.data.email });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    if (open) {
+      fetchUserData();
+    }
+  }, [open]);
+
+  console.log(user)
   const handleSignOut = React.useCallback(async (): Promise<void> => {
     try {
       const { error } = await authClient.signOut();
-
       if (error) {
         logger.error('Sign out error', error);
         return;
       }
 
-      // Refresh the auth state
       await checkSession?.();
-
-      // UserProvider, for this case, will not refresh the router and we need to do it manually
       router.refresh();
-      // After refresh, AuthGuard will handle the redirect
     } catch (err) {
       logger.error('Sign out error', err);
     }
@@ -57,9 +86,9 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
       slotProps={{ paper: { sx: { width: '240px' } } }}
     >
       <Box sx={{ p: '16px 20px ' }}>
-        <Typography variant="subtitle1">Sofia Rivers</Typography>
+        <Typography variant="subtitle1">{user ? user.name : 'Loading...'}</Typography>
         <Typography color="text.secondary" variant="body2">
-          sofia.rivers@devias.io
+          {user ? user.email : ''}
         </Typography>
       </Box>
       <Divider />
